@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <Folder Include="Email\" />
-    <Folder Include="Security\" />
   </ItemGroup>
 
   <ItemGroup>
