@@ -27,7 +27,7 @@ namespace LogInLab.Infrastructure.Security
                 Convert.ToBase64String(hash));
         }
 
-        public bool verify(string password, string hashedPassword)
+        public bool Verify(string password, string hashedPassword)
         {
             string[] parts = hashedPassword.Split('.');
             if(parts.Length != 5)
