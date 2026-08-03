@@ -1,4 +1,5 @@
-﻿using LogInLab.Application.DTOs;
+﻿using FluentValidation;
+using LogInLab.Application.DTOs;
 using LogInLab.Application.Exceptions;
 using LogInLab.Application.Interfaces;
 using LogInLab.Domain.Entities;
@@ -10,16 +11,25 @@ namespace LogInLab.Application.Services
         private readonly IUserRepository _userRepository;
         private readonly IPasswordHasher _passwordHasher;
         private readonly ISessionRepository _sessionRepository;
+        private readonly IValidator<RegisterRequest> _registerValidator;
 
-        public AuthService(IUserRepository userRepository, IPasswordHasher passwordHasher, ISessionRepository sessionRepository)
+        public AuthService(IUserRepository userRepository, IPasswordHasher passwordHasher, ISessionRepository sessionRepository, IValidator<RegisterRequest> registerValidator)
         {
             _userRepository = userRepository;
             _passwordHasher = passwordHasher;
             _sessionRepository = sessionRepository;
+            _registerValidator = registerValidator;
         }
 
         public async Task<AuthResult> RegisterAsync(RegisterRequest request)
         {
+            FluentValidation.Results.ValidationResult validationResult = await _registerValidator.ValidateAsync(request);
+            if(!validationResult.IsValid)
+            {
+                string firstError = validationResult.Errors.FirstOrDefault()?.ErrorMessage ?? "Invalid registration data.";
+                return AuthResult.FailureResult(firstError);
+            }
+
             string normalizedEmail = request.Email.Trim().ToLowerInvariant();
 
             User? existingUser = await _userRepository.GetByEmailAsync(normalizedEmail);

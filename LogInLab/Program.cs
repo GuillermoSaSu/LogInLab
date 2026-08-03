@@ -1,13 +1,16 @@
+using FluentValidation;
+using LogInLab.Application.DTOs;
 using LogInLab.Application.Interfaces;
 using LogInLab.Application.Services;
+using LogInLab.Application.Validators;
+using LogInLab.Domain.Entities;
 using LogInLab.Infrastructure.Persistence;
 using LogInLab.Infrastructure.Persistence.Repositories;
 using LogInLab.Infrastructure.Security;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
-using LogInLab.Domain.Entities;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +23,14 @@ builder.Services.AddScoped<IPasswordHasher, Argon2PasswordHasher>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
+builder.Services.AddScoped<IValidator<RegisterRequest>, RegisterRequestValidator>();
+
+builder.Services.AddHttpClient<IPasswordBreachChecker, HaveIBeenPwnedChecker>(client =>
+{
+    client.BaseAddress = new Uri("https://api.pwnedpasswords.com/");
+    client.Timeout = TimeSpan.FromSeconds(3);
+    client.DefaultRequestHeaders.Add("Add-Padding", "true");
+});
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
