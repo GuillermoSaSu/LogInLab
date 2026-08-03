@@ -1,4 +1,5 @@
 ﻿using LogInLab.Application.DTOs;
+using LogInLab.Application.Exceptions;
 using LogInLab.Application.Interfaces;
 using LogInLab.Domain.Entities;
 
@@ -41,12 +42,12 @@ namespace LogInLab.Application.Services
             try
             {
                 await _userRepository.AddAsync(user);
-                return AuthResult.SuccessResult();
             }
-            catch (Exception)
+            catch (DuplicateEmailException)
             {
                 return AuthResult.FailureResult("An error occurred while registering the user.");
             }
+            return AuthResult.SuccessResult();
         }
 
         public async Task<LoginResult> LoginAsync(LoginRequest request)
