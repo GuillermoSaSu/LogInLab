@@ -11,6 +11,8 @@ namespace LogInLab.Infrastructure.Persistence
 
         public DbSet<Session> Sessions => Set<Session>();
 
+        public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

@@ -4,6 +4,7 @@ using LogInLab.Application.Interfaces;
 using LogInLab.Application.Services;
 using LogInLab.Application.Validators;
 using LogInLab.Domain.Entities;
+using LogInLab.Infrastructure.Email;
 using LogInLab.Infrastructure.Persistence;
 using LogInLab.Infrastructure.Persistence.Repositories;
 using LogInLab.Infrastructure.Security;
@@ -24,6 +25,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<IValidator<RegisterRequest>, RegisterRequestValidator>();
+builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 
 builder.Services.AddHttpClient<IPasswordBreachChecker, HaveIBeenPwnedChecker>(client =>
 {
