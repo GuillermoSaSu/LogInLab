@@ -1,11 +1,11 @@
 ﻿using LogInLab.Application.DTOs;
 using LogInLab.Application.Interfaces;
+using LogInLab.Application.Services;
 using LogInLab.Models.ViewModels;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Query.ExpressionTranslators.Internal;
 using System.Security.Claims;
 
 namespace LogInLab.Controllers
@@ -13,10 +13,12 @@ namespace LogInLab.Controllers
     public class AccountController : Controller
     {
         private readonly IAuthService _authService;
+        private readonly IEmailVerificationService _emailVerificationService;
 
-        public AccountController(IAuthService authService)
+        public AccountController(IAuthService authService, IEmailVerificationService emailVerificationService)
         {
             _authService = authService;
+            _emailVerificationService = emailVerificationService;
         }
 
         [HttpGet]
@@ -101,6 +103,21 @@ namespace LogInLab.Controllers
             }
 
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Login");
+        }
+
+        [HttpGet]  
+        public async Task<IActionResult> VerifyEmail(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var success = await _emailVerificationService.VerifyAsync(token);
+
+            TempData["SuccessMessage"] = success ? "Email verified successfully!" : "Invalid or expired verification link.";
+
             return RedirectToAction("Login");
         }
     }

@@ -12,13 +12,15 @@ namespace LogInLab.Application.Services
         private readonly IPasswordHasher _passwordHasher;
         private readonly ISessionRepository _sessionRepository;
         private readonly IValidator<RegisterRequest> _registerValidator;
+        private readonly IEmailVerificationService _emailVerificationService;
 
-        public AuthService(IUserRepository userRepository, IPasswordHasher passwordHasher, ISessionRepository sessionRepository, IValidator<RegisterRequest> registerValidator)
+        public AuthService(IUserRepository userRepository, IPasswordHasher passwordHasher, ISessionRepository sessionRepository, IValidator<RegisterRequest> registerValidator, IEmailVerificationService emailVerificationService)
         {
             _userRepository = userRepository;
             _passwordHasher = passwordHasher;
             _sessionRepository = sessionRepository;
             _registerValidator = registerValidator;
+            _emailVerificationService = emailVerificationService;
         }
 
         public async Task<AuthResult> RegisterAsync(RegisterRequest request)
@@ -57,6 +59,9 @@ namespace LogInLab.Application.Services
             {
                 return AuthResult.FailureResult("An error occurred while registering the user.");
             }
+
+            await _emailVerificationService.SendVerificationEmailAsync(user.Id, user.Email);
+
             return AuthResult.SuccessResult();
         }
 
@@ -76,6 +81,11 @@ namespace LogInLab.Application.Services
             if (!isPasswordValid)
             {
                 return LoginResult.FailureResult(genericError);
+            }
+
+            if(!user.EmailVerified)
+            {
+                return LoginResult.FailureResult("You should verify your email before login. Check your inbox.");
             }
 
             Session session = new Session
