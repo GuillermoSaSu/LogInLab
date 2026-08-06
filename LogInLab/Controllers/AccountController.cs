@@ -106,7 +106,7 @@ namespace LogInLab.Controllers
             return RedirectToAction("Login");
         }
 
-        [HttpGet]  
+        [HttpGet]
         public async Task<IActionResult> VerifyEmail(string token)
         {
             if (string.IsNullOrEmpty(token))
@@ -118,6 +118,27 @@ namespace LogInLab.Controllers
 
             TempData["SuccessMessage"] = success ? "Email verified successfully!" : "Invalid or expired verification link.";
 
+            return RedirectToAction("Login");
+        }
+
+        [HttpGet]
+        public IActionResult ResendVerification()
+        {
+            return View(new ResendVerificationViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResendVerification(ResendVerificationViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            await _emailVerificationService.ResendVerificationEmailAsync(model.Email);
+
+            TempData["SuccessMessage"] = "If the account exists and it is not verified yet, a new verification email has been sent";
             return RedirectToAction("Login");
         }
     }

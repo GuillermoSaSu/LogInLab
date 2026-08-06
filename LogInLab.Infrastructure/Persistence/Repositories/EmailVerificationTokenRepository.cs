@@ -38,5 +38,14 @@ namespace LogInLab.Infrastructure.Persistence.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<EmailVerificationToken> GetLastestByUserIdAsync(Guid userId)
+        {
+            return await _context.EmailVerificationTokens
+                .Where(t => t.UserId == userId)
+                .OrderByDescending(t => t.CreatedAt)
+                .FirstOrDefaultAsync() ?? throw new InvalidOperationException("No email verification token found for the specified user.");
+        }
+
     }
 }

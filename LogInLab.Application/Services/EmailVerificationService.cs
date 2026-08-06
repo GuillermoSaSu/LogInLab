@@ -1,4 +1,5 @@
-﻿using LogInLab.Application.Interfaces;
+﻿using LogInLab.Application.DTOs;
+using LogInLab.Application.Interfaces;
 using LogInLab.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using System.Security.Cryptography;
@@ -8,6 +9,7 @@ namespace LogInLab.Application.Services
     public class EmailVerificationService : IEmailVerificationService
     {
         private const int TokenExpirationMinutes = 30;
+        private const int ResendCooldownMinutes = 2;
 
         private readonly IEmailVerificationTokenRepository _tokenRepository;
         private readonly IUserRepository _userRepository;
@@ -93,6 +95,27 @@ namespace LogInLab.Application.Services
             byte[] bytes = System.Text.Encoding.UTF8.GetBytes(rawToken);
             byte[] hashBytes = SHA256.HashData(bytes);
             return Convert.ToHexString(hashBytes);
+        }
+
+        public async Task<AuthResult> ResendVerificationEmailAsync(string email)
+        {
+            string normalizedEmail = email.Trim().ToLowerInvariant();
+            User? user = await _userRepository.GetByEmailAsync(normalizedEmail);
+
+            if (user is null || user.EmailVerified)
+            {
+                return AuthResult.SuccessResult();
+            }
+
+            EmailVerificationToken lastestToken = await _tokenRepository.GetLastestByUserIdAsync(user.Id);
+            if(lastestToken is not null && lastestToken.CreatedAt.AddMinutes(ResendCooldownMinutes) > DateTime.UtcNow)
+            {
+                //Not enough time has passed since the last token was created, so we don't send a new email.
+                return AuthResult.SuccessResult();
+            }
+
+            await SendVerificationEmailAsync(user.Id, user.Email);
+            return AuthResult.SuccessResult();
         }
     }
 }

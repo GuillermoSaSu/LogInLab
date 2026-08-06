@@ -7,5 +7,6 @@ namespace LogInLab.Application.Interfaces
         Task AddAsync(EmailVerificationToken token);
         Task<EmailVerificationToken?> GetByTokenHashAsync(string tokenHash);
         Task MarkAsUsedAsync(Guid tokenId);
+        Task<EmailVerificationToken> GetLastestByUserIdAsync(Guid userId);
     }
 }
