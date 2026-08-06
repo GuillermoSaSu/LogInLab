@@ -1,0 +1,145 @@
+﻿using LogInLab.Application.DTOs;
+using LogInLab.Application.Interfaces;
+using LogInLab.Application.Services;
+using LogInLab.Models.ViewModels;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+
+namespace LogInLab.Controllers
+{
+    public class AccountController : Controller
+    {
+        private readonly IAuthService _authService;
+        private readonly IEmailVerificationService _emailVerificationService;
+
+        public AccountController(IAuthService authService, IEmailVerificationService emailVerificationService)
+        {
+            _authService = authService;
+            _emailVerificationService = emailVerificationService;
+        }
+
+        [HttpGet]
+        public IActionResult Register()
+        {
+            return View(new RegisterViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(RegisterViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            RegisterRequest request = new RegisterRequest(model.Email, model.Password);
+            AuthResult result = await _authService.RegisterAsync(request);
+
+            if (!result.Success)
+            {
+                ModelState.AddModelError(string.Empty, result.ErrorMessage);
+                return View(model);
+            }
+
+            TempData["SuccessMessage"] = "Registration successful! Please check your email to verify your account.";
+            return RedirectToAction("Login");
+        }
+
+        [HttpGet]
+        public IActionResult Login()
+        {
+            return View(new LoginViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            string idAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            string userAgent = Request.Headers.UserAgent.ToString();
+
+            LoginRequest requsest = new LoginRequest(model.Email, model.Password, idAddress, userAgent);
+            LoginResult result = await _authService.LoginAsync(requsest);
+
+            if (!result.Success)
+            {
+                ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Error");
+                return View(model);
+            }
+
+            List<Claim> claims = new List<Claim>
+            {
+                new(ClaimTypes.NameIdentifier, result.UserId!.Value.ToString()),
+                new("SessionId", result.SessionId!.Value.ToString())
+            };
+
+            ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
+
+            return RedirectToAction("Index", "Profile");
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
+        {
+            string? sessionIdString = User.FindFirst("SessionId")?.Value;
+
+            if (Guid.TryParse(sessionIdString, out Guid sessionId))
+            {
+                await _authService.LogoutAsync(sessionId);
+            }
+
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Login");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> VerifyEmail(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var success = await _emailVerificationService.VerifyAsync(token);
+
+            TempData["SuccessMessage"] = success ? "Email verified successfully!" : "Invalid or expired verification link.";
+
+            return RedirectToAction("Login");
+        }
+
+        [HttpGet]
+        public IActionResult ResendVerification()
+        {
+            return View(new ResendVerificationViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResendVerification(ResendVerificationViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            await _emailVerificationService.ResendVerificationEmailAsync(model.Email);
+
+            TempData["SuccessMessage"] = "If the account exists and it is not verified yet, a new verification email has been sent";
+            return RedirectToAction("Login");
+        }
+    }
+}

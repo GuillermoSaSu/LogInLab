@@ -1,0 +1,25 @@
+﻿@model LogInLab.Models.ViewModels.ResendVerificationViewModel
+
+@{
+    ViewData["Title"] = "Reenviar verificación";
+}
+
+<h1>Resend email verification</h1>
+
+<p>Enter your email address, and if your account exists and is not yet verified, we will send you a new link.</p>
+
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+<form asp-action="ResendVerification" method="post">
+    <div class="form-group mb-3">
+        <label asp-for="Email"></label>
+        <input asp-for="Email" class="form-control" autocomplete="email" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Forward link</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

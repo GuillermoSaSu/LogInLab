@@ -1,0 +1,11 @@
+﻿@{
+    ViewData["Title"] = "Perfil";
+}
+
+<h1>Profile</h1>
+<p>You has been login succesfully.</p>
+<p>User ID: @ViewBag.UserId</p>
+
+<form asp-controller="Account" asp-action="Logout" method="post">
+    <button type="submit" class="btn btn-outline-danger">Cerrar sesión</button>
+</form>
