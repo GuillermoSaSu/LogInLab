@@ -14,11 +14,13 @@ namespace LogInLab.Controllers
     {
         private readonly IAuthService _authService;
         private readonly IEmailVerificationService _emailVerificationService;
+        private readonly IPasswordResetService _passwordResetService;
 
-        public AccountController(IAuthService authService, IEmailVerificationService emailVerificationService)
+        public AccountController(IAuthService authService, IEmailVerificationService emailVerificationService, IPasswordResetService passwordResetService)
         {
             _authService = authService;
             _emailVerificationService = emailVerificationService;
+            _passwordResetService = passwordResetService;
         }
 
         [HttpGet]
@@ -139,6 +141,60 @@ namespace LogInLab.Controllers
             await _emailVerificationService.ResendVerificationEmailAsync(model.Email);
 
             TempData["SuccessMessage"] = "If the account exists and it is not verified yet, a new verification email has been sent";
+            return RedirectToAction("Login");
+        }
+
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View(new ForgotPasswordViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            await _passwordResetService.RequestPasswordResetAsync(model.Email);
+
+            TempData["SuccessMessage"] = "If the account exists, a password reset email has been sent";
+
+            return RedirectToAction("Login");
+        }
+
+        [HttpGet]
+        public IActionResult ResetPassword(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+            {
+                return RedirectToAction("Login");
+            }
+            return View(new ResetPasswordViewModel { Token = token });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            AuthResult result = await _passwordResetService.ResetPasswordAsync(model.Token, model.NewPassword);
+            
+            if (!result.Success)
+            {
+                ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Error");
+                return View(model);
+            }
+
+            TempData["SuccessMessage"] = "Password reset successful! You can now log in with your new password.";
+
             return RedirectToAction("Login");
         }
     }
