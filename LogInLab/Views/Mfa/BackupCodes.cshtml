@@ -1,0 +1,21 @@
+﻿@model LogInLab.Models.ViewModels.MfaBackupCodesViewmodel
+
+@{
+    ViewData["Title"] = "Backup codes";
+}
+
+<h1>Two-step authentication enabled!</h1>
+
+<div class="alert alert-warning">
+    <stong>Important:</stong>Store these codes in a safe place. Each one can only be used once, and they will allow you to log in if you lose access to your authenticator app. 
+    You will not be able to view this list again.
+</div>
+
+<ul class="list-group">
+    @foreach(var code in Model.BackupCodes)
+    {
+        <li class="list-group-item"><code>@code</code></li>
+    }
+</ul>
+
+<a asp-controller="Profile" asp-action="Index" class="btn btn-primary mt-3">I've already saved them. Continue.</a>

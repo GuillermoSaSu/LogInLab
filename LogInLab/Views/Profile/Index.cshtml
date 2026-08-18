@@ -6,6 +6,10 @@
 <p>You has been login succesfully.</p>
 <p>User ID: @ViewBag.UserId</p>
 
+
+<h3>Two-steps authentication</h3>
+<a asp-controller="Mfa" asp-action="Setup" class="btn btn-outline-primary">Configure two-steps authentication</a>
+
 <form asp-controller="Account" asp-action="Logout" method="post">
-    <button type="submit" class="btn btn-outline-danger">Cerrar sesión</button>
+    <button type="submit" class="btn btn-outline-danger">Close session</button>
 </form>

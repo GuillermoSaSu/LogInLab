@@ -1,0 +1,36 @@
+﻿@model LogInLab.Models.ViewModels.MfaSetupViewModel
+
+@{
+    ViewData["Title"] = "Configure two steps authentication";
+}
+
+<h1>Configure two steps authentication</h1>
+
+<ol>
+    <li>Open your authentication app (Google Authenticator, Authy, etc.)</li>
+    <li>Scan this QR code:</li>
+</ol>
+
+<img src="data:image/png;base64,@Model.QrCodeBase64Image" alt="Configuration QR code MFA"/>
+
+<p>If you cannot scan the code, enter this key manually in your app:</p>
+<p><code>@Model.SecretKey</code></p>
+
+<hr />
+
+<h3>
+    Confirm the configuration
+</h3>
+
+<p>Enter the 6-digit code shown in your app to confirm that everything is set up correctly:</p>
+
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+<form asp-controller="Mfa" asp-action="ConfirmSetup" method="post">
+    <div class="form-group mb-3">
+        <label asp-for="@(new LogInLab.Models.ViewModels.MfaConfirmViewModel().Code)">Verification code</label>
+        <input name="Code" class="form-control" autocomplete="one-time-code" maxlength="6"/>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Confirm and activate</button>
+</form>
