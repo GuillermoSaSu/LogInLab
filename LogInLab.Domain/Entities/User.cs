@@ -10,6 +10,7 @@
         public DateTime? LockedUntil { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public bool MfaEnabled { get; set; }
 
         public ICollection<Session> Sessions { get; set; } = new List<Session>();
     }

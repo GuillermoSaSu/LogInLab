@@ -1,0 +1,25 @@
+﻿@model LogInLab.Models.ViewModels.VerifyLoginMfaViewModel
+
+@{
+    ViewData["Title"] = "Two-steps authentication";
+}
+
+<h1>Two-steps authentication</h1>
+
+<p>Enter the 6-digit code shown in your app or one backup code:</p>
+
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+<form asp-action="VerifyLoginMfa" method="post">
+    <div class="form-group mb-3">
+        <label asp-for="Code"></label>
+        <input asp-for="Code" class="form-control" autocomplete="one-time-code" autofocus/>
+        <span asp-validation-for="Code" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Verify</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

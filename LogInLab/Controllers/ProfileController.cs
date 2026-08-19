@@ -1,15 +1,31 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using LogInLab.Application.Interfaces;
+using LogInLab.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace LogInLab.Controllers
 {
     [Authorize]
     public class ProfileController : Controller
     {
-        public IActionResult Index()
+        private readonly IUserRepository _userRepository;
+
+        public ProfileController(IUserRepository userRepository)
         {
-            string? email = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            ViewBag.UserId = email;
+            _userRepository = userRepository;
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            string? idClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Guid userId = Guid.Parse(idClaim!);
+
+            User? user = await _userRepository.GetByIdAsync(userId);
+
+            ViewBag.UserId = userId;
+            ViewBag.MfaEnabled = user?.MfaEnabled ?? false;
+
             return View();
         }
     }

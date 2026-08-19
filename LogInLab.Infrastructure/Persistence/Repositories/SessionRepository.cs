@@ -1,10 +1,6 @@
 ﻿using LogInLab.Application.Interfaces;
 using LogInLab.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace LogInLab.Infrastructure.Persistence.Repositories
 {
@@ -36,6 +32,18 @@ namespace LogInLab.Infrastructure.Persistence.Repositories
                 session.RevokedAt = DateTime.UtcNow;
                 await _dbContext.SaveChangesAsync();
             }
+        }
+
+        public async Task RevokeAllForUserAsync(Guid userId)
+        {
+            var activeSessions = _dbContext.Sessions.Where(s => s.UserId == userId && s.RevokedAt == null).ToListAsync();
+
+            foreach (var session in activeSessions.Result)
+            {
+                session.RevokedAt = DateTime.UtcNow;
+            }
+
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

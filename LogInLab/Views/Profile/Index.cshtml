@@ -6,6 +6,27 @@
 <p>You has been login succesfully.</p>
 <p>User ID: @ViewBag.UserId</p>
 
+
+<h3>Two-steps authentication</h3>
+
+
+@if ((bool) ViewBag.MfaEnabled)
+{
+    <p>Two-steps authentication is <strong>enabled</strong>.</p>
+    <form asp-controller="Mfa" asp-action="Disable" method="post"
+        onsubmit="return confirm('Are you sure you want disabled the two-steps authentication? You will lose your backup codes.">
+        <button type="submit" class="btn btn-outline-danger">Disable two-steps authentication</button>
+
+    </form>
+}
+else
+{
+    <p>Two-steps authentication is disabled.</p>
+    <a asp-controller="Mfa" asp-action="Setup" class="btn btn-outline-primary">Configure two-steps authentication</a>
+}
+
+<hr />
+
 <form asp-controller="Account" asp-action="Logout" method="post">
-    <button type="submit" class="btn btn-outline-danger">Cerrar sesión</button>
+    <button type="submit" class="btn btn-outline-danger">Close session</button>
 </form>

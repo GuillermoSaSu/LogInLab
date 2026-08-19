@@ -13,6 +13,13 @@ namespace LogInLab.Infrastructure.Persistence
 
         public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
 
+        public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+
+        public DbSet<MfaSecret> MfaSecrets => Set<MfaSecret>();
+
+        public DbSet<BackupCode> BackupCodes => Set<BackupCode>();
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

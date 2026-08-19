@@ -28,6 +28,14 @@ builder.Services.AddScoped<IValidator<RegisterRequest>, RegisterRequestValidator
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 builder.Services.AddScoped<IEmailVerificationTokenRepository, EmailVerificationTokenRepository>();
 builder.Services.AddScoped<IEmailVerificationService, EmailVerificationService>();
+builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
+builder.Services.AddScoped<IValidator<ResetPasswordRequest>, ResetPasswordRequestValidator>();
+builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
+builder.Services.AddSingleton<IEncryptionService, AesEncryptionService>();
+builder.Services.AddSingleton<ITotpService, TotpService>();
+builder.Services.AddScoped<IMfaSecretRepository, MfaSecretRepository>();
+builder.Services.AddScoped<IBackupCodeRepository, BackupCodeRepository>();
+builder.Services.AddScoped<IMfaService, MfaService>();
 
 builder.Services.AddHttpClient<IPasswordBreachChecker, HaveIBeenPwnedChecker>(client =>
 {
