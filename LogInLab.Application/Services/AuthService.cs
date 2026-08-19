@@ -88,12 +88,33 @@ namespace LogInLab.Application.Services
                 return LoginResult.FailureResult("You should verify your email before login. Check your inbox.");
             }
 
+            if (user.MfaEnabled)
+            {
+                return LoginResult.MfaRequired(user.Id);
+            }
+
+            return await CreateSessionAndCompleteLoginAsync(user, request.IpAddress, request.UserAgent);
+        }
+
+        public async Task<LoginResult> CompleteMfaLoginAsync(Guid userId, string ipAddress, string userAgent)
+        {
+            User? user = await _userRepository.GetByIdAsync(userId);
+            if (user is null)
+            {
+                return LoginResult.FailureResult("Login could not be completed.");
+            }
+
+            return await CreateSessionAndCompleteLoginAsync(user, ipAddress, userAgent);
+        }
+
+        private async Task<LoginResult> CreateSessionAndCompleteLoginAsync(User user, string ipAddress, string userAgent)
+        {
             Session session = new Session
             {
                 Id = Guid.NewGuid(),
                 UserId = user.Id,
-                IpAddress = request.IpAddress,
-                UserAgent = request.UserAgent,
+                IpAddress = ipAddress,
+                UserAgent = userAgent,
                 CreatedAt = DateTime.UtcNow,
                 ExpiresAt = DateTime.UtcNow.AddHours(8)
             };

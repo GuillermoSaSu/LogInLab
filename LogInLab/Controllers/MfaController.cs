@@ -84,6 +84,17 @@ namespace LogInLab.Controllers
             return View(viewModel);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Disable()
+        {
+            Guid userId = GetCurrentUserId();
+            await _mfaService.DisableAsync(userId);
+
+            TempData["SuccessMessage"] = "Two-steps authentication has been disabled.";
+            return RedirectToAction("Index", "Profile");
+        }
+
         private Guid GetCurrentUserId()
         {
             string? idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);

@@ -174,8 +174,7 @@ namespace LogInLab.Application.Services
 
         private async Task<bool> TryConsumeBackupCodeAsync(Guid userId, string code)
         {
-            var normalizedCode = code.Replace("-", "").Trim().ToUpperInvariant();
-            var codeHash = HashBackupCode(normalizedCode);
+            var codeHash = HashBackupCode(code);
 
             var unusedCodes = await _backupCodeRepository.GetUnusedCodesByUserIdAsync(userId);
             var matchingCode = unusedCodes.FirstOrDefault(c =>
