@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace LogInLab.Controllers
@@ -34,6 +34,7 @@ namespace LogInLab.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("AuthModerate")]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (!ModelState.IsValid)
@@ -62,6 +63,7 @@ namespace LogInLab.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("AuthStrict")]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (!ModelState.IsValid)
@@ -145,6 +147,7 @@ namespace LogInLab.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("AuthModerate")]
         public async Task<IActionResult> ResendVerification(ResendVerificationViewModel model)
         {
             if (!ModelState.IsValid)
@@ -166,6 +169,7 @@ namespace LogInLab.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("AuthModerate")]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
             if (!ModelState.IsValid)
@@ -225,6 +229,7 @@ namespace LogInLab.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("AuthStrict")]
         public async Task<IActionResult> VerifyLoginMfa(VerifyLoginMfaViewModel model)
         {
             string? pendingUserIdRaw = TempData["PendingMfaUserId"]?.ToString(); 

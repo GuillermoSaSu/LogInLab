@@ -14,6 +14,9 @@ namespace LogInLab.Application.Services
         private readonly IValidator<RegisterRequest> _registerValidator;
         private readonly IEmailVerificationService _emailVerificationService;
 
+        private const int MaxFailedAttempts = 5;
+        private const int LockoutMinutes = 15;
+
         public AuthService(IUserRepository userRepository, IPasswordHasher passwordHasher, ISessionRepository sessionRepository, IValidator<RegisterRequest> registerValidator, IEmailVerificationService emailVerificationService)
         {
             _userRepository = userRepository;
@@ -77,10 +80,25 @@ namespace LogInLab.Application.Services
                 return LoginResult.FailureResult(genericError);
             }
 
+            if (user.LockedUntil is not null && user.LockedUntil > DateTime.UtcNow) 
+            {
+                double remainingMinutes = Math.Ceiling((user.LockedUntil.Value - DateTime.UtcNow).TotalMinutes);
+                return LoginResult.FailureResult($"Account blocked after several tries. Try again in {remainingMinutes} minutes.");
+            }
+
             bool isPasswordValid = _passwordHasher.Verify(request.Password, user.PasswordHash);
             if (!isPasswordValid)
             {
+                await RegisterFailedAttemptAsync(user);
                 return LoginResult.FailureResult(genericError);
+            }
+
+            if(user.FailedLoginAttempts > 0 || user.LockedUntil is not null)
+            {
+                user.FailedLoginAttempts = 0;
+                user.LockedUntil = null;
+                user.UpdatedAt = DateTime.UtcNow;
+                await _userRepository.UpdateAsync(user);
             }
 
             if(!user.EmailVerified)
@@ -94,6 +112,19 @@ namespace LogInLab.Application.Services
             }
 
             return await CreateSessionAndCompleteLoginAsync(user, request.IpAddress, request.UserAgent);
+        }
+
+        private async Task RegisterFailedAttemptAsync(User user)
+        {
+            user.FailedLoginAttempts++;
+
+            if(user.FailedLoginAttempts >= MaxFailedAttempts)
+            {
+                user.LockedUntil = DateTime.UtcNow.AddMinutes(LockoutMinutes);
+            }
+
+            user.UpdatedAt = DateTime.UtcNow;
+            await _userRepository.UpdateAsync(user);
         }
 
         public async Task<LoginResult> CompleteMfaLoginAsync(Guid userId, string ipAddress, string userAgent)
