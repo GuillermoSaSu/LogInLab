@@ -42,7 +42,10 @@ namespace LogInLab.Controllers
                 return View(model);
             }
 
-            RegisterRequest request = new RegisterRequest(model.Email, model.Password);
+            string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            string userAgent = Request.Headers.UserAgent.ToString();
+
+            RegisterRequest request = new RegisterRequest(model.Email, model.Password, ipAddress, userAgent);
             AuthResult result = await _authService.RegisterAsync(request);
 
             if (!result.Success)
@@ -114,10 +117,14 @@ namespace LogInLab.Controllers
         public async Task<IActionResult> Logout()
         {
             string? sessionIdString = User.FindFirst("SessionId")?.Value;
+            string? userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            string userAgent = Request.Headers.UserAgent.ToString();
 
             if (Guid.TryParse(sessionIdString, out Guid sessionId))
             {
-                await _authService.LogoutAsync(sessionId);
+                Guid.TryParse(userIdClaim, out Guid userId);
+                await _authService.LogoutAsync(sessionId, ipAddress, userAgent, userId);
             }
 
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -172,12 +179,17 @@ namespace LogInLab.Controllers
         [EnableRateLimiting("AuthModerate")]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
+            string? userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            string userAgent = Request.Headers.UserAgent.ToString();
+
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
 
-            await _passwordResetService.RequestPasswordResetAsync(model.Email);
+            Guid.TryParse(userIdClaim, out var userId);
+            await _passwordResetService.RequestPasswordResetAsync(ipAddress, userAgent, userId, model.Email);
 
             TempData["SuccessMessage"] = "If the account exists, a password reset email has been sent";
 

@@ -19,6 +19,8 @@ namespace LogInLab.Infrastructure.Persistence
 
         public DbSet<BackupCode> BackupCodes => Set<BackupCode>();
 
+        public DbSet<AuthEvent> AuthEvents => Set<AuthEvent>();
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

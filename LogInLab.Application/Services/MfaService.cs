@@ -1,6 +1,8 @@
 ﻿using LogInLab.Application.DTOs;
 using LogInLab.Application.Interfaces;
 using LogInLab.Domain.Entities;
+using LogInLab.Domain.Enums;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -15,19 +17,22 @@ namespace LogInLab.Application.Services
         private readonly IUserRepository _userRepository;
         private readonly ITotpService _totpService;
         private readonly IEncryptionService _encryptionService; 
+        private readonly IAuthEventLogger _authEventLogger;
 
         public MfaService(
             IMfaSecretRepository mfaSecretRepository,
             IBackupCodeRepository backupCodeRepository,
             IUserRepository userRepository,
             ITotpService totpService,
-            IEncryptionService encryptionService)
+            IEncryptionService encryptionService,
+            IAuthEventLogger authEventLogger)
         {
             _mfaSecretRepository = mfaSecretRepository;
             _backupCodeRepository = backupCodeRepository;
             _userRepository = userRepository;
             _totpService = totpService;
             _encryptionService = encryptionService;
+            _authEventLogger = authEventLogger;
         }
 
         public async Task<MfaSetupResult> BeingSetupAsync(Guid userId, string userEmail)
@@ -57,7 +62,7 @@ namespace LogInLab.Application.Services
             return new MfaSetupResult(secretKey, qeCodeUri);
         }
 
-        public async Task<MfaActivationResult> ConfirmSetupAsync(Guid userId, string code)
+        public async Task<MfaActivationResult> ConfirmSetupAsync(string ipAddress, string userAgent, Guid userId, string code)
         {
             MfaSecret? mfaSecret = await _mfaSecretRepository.GetByUserIdAsync(userId);
 
@@ -84,6 +89,7 @@ namespace LogInLab.Application.Services
                 user.MfaEnabled = true;
                 user.UpdatedAt = DateTime.UtcNow;
                 await _userRepository.UpdateAsync(user);
+                await _authEventLogger.LogAsync(AuthEventType.MfaEnabled, ipAddress, userAgent, userId, user.Email);
             }
 
             List<string> backupCodes = await GenerateAndStoreBackupCodesAsync(userId);
@@ -139,7 +145,7 @@ namespace LogInLab.Application.Services
             return $"{new string(chars, 0, 4)}-{new string(chars, 4, 4)}";
         }
 
-        public async Task DisableAsync(Guid userId)
+        public async Task DisableAsync(string ipAddress, string userAgent, Guid userId)
         {
             await _mfaSecretRepository.DeleteAsync(userId);
             await _backupCodeRepository.DeleteAllForUserAsync(userId);
@@ -150,8 +156,8 @@ namespace LogInLab.Application.Services
                 user.MfaEnabled = false;
                 user.UpdatedAt = DateTime.UtcNow;
                 await _userRepository.UpdateAsync(user);
+                await _authEventLogger.LogAsync(AuthEventType.MfaDisabled, ipAddress, userAgent, userId);
             }
-
         }
 
         public async Task<bool> ValidateCodeOrBackupAsync(Guid userId, string code)
