@@ -41,13 +41,16 @@ namespace LogInLab.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ConfirmSetup(MfaConfirmViewModel model)
         {
+            string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            string userAgent = Request.Headers.UserAgent.ToString();
+
             if (!ModelState.IsValid)
             {
                 return View("Setup", model);
             }
 
             Guid userId = GetCurrentUserId();
-            MfaActivationResult result = await _mfaService.ConfirmSetupAsync(userId, model.Code);
+            MfaActivationResult result = await _mfaService.ConfirmSetupAsync(ipAddress, userAgent, userId, model.Code);
 
             if (!result.Success) 
             {
@@ -88,8 +91,11 @@ namespace LogInLab.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Disable()
         {
+            string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            string userAgent = Request.Headers.UserAgent.ToString();
+
             Guid userId = GetCurrentUserId();
-            await _mfaService.DisableAsync(userId);
+            await _mfaService.DisableAsync(ipAddress, userAgent, userId);
 
             TempData["SuccessMessage"] = "Two-steps authentication has been disabled.";
             return RedirectToAction("Index", "Profile");

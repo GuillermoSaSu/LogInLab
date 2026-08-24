@@ -6,7 +6,7 @@ namespace LogInLab.Application.Interfaces
     {
         Task<AuthResult> RegisterAsync(RegisterRequest request);
         Task<LoginResult> LoginAsync(LoginRequest request);
-        Task LogoutAsync(Guid sessionId);
+        Task LogoutAsync(Guid sessionId, string ipAddress, string userAgent, Guid? userId);
         Task<LoginResult> CompleteMfaLoginAsync(Guid userId, string ipAddress, string userAgent);
     }
 }

@@ -2,6 +2,7 @@
 using LogInLab.Application.DTOs;
 using LogInLab.Application.Interfaces;
 using LogInLab.Domain.Entities;
+using LogInLab.Domain.Enums;
 using Microsoft.Extensions.Configuration;
 using System.Security.Cryptography;
 using System.Text;
@@ -19,6 +20,7 @@ namespace LogInLab.Application.Services
         private readonly IEmailSender _emailSender;
         private readonly IValidator<ResetPasswordRequest> _resetValidator;
         private readonly IConfiguration _configuration;
+        private readonly IAuthEventLogger _authEventLogger;
 
         public PasswordResetService(
             IUserRepository userRepository,
@@ -27,7 +29,8 @@ namespace LogInLab.Application.Services
             IPasswordHasher passwordHasher,
             IEmailSender emailSender,
             IValidator<ResetPasswordRequest> resetValidator,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IAuthEventLogger authEventLogger)
         {
             _userRepository = userRepository;
             _passwordResetTokenRepository = passwordResetTokenRepository;
@@ -36,9 +39,10 @@ namespace LogInLab.Application.Services
             _emailSender = emailSender;
             _resetValidator = resetValidator;
             _configuration = configuration;
+            _authEventLogger = authEventLogger;
         }
 
-        public async Task<AuthResult> RequestPasswordResetAsync(string email)
+        public async Task<AuthResult> RequestPasswordResetAsync(string ipAddress, string userAgent, Guid userId, string email)
         {
             string normalizedEmail = email.Trim().ToLowerInvariant();
             User? user = await _userRepository.GetByEmailAsync(normalizedEmail);
@@ -70,6 +74,7 @@ namespace LogInLab.Application.Services
             string htmlBody = $"<p>You requested a password reset. Click the link below to reset your password:</p><p><a href=\"{resetLink}\">Reset Password</a></p>";
 
             await _emailSender.SendAsync(user.Email, "Password Reset Request in LogInLab", htmlBody);
+            await _authEventLogger.LogAsync(AuthEventType.PasswordResetCompleted, ipAddress, userAgent, userId, email);
             return AuthResult.SuccessResult();
 
         }

@@ -1,0 +1,49 @@
+﻿@using LogInLab.Models.ViewModels
+@model List<LogInLab.Models.ViewModels.SessionViewModel>
+
+@{
+    ViewData["Title"] = "Active sessions";
+}
+
+<h1>Active sessions</h1>
+
+@if (TempData["SuccessMessage"] is not null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+@if (Model.Count > 1)
+{
+    <form asp-action="RevokeAllOthers" method="post" class="mb-3">
+        <button type="submit" class="btn btn-outline-danger">Close all sessions</button>
+    </form>
+}
+
+<div class="list-group">
+    @foreach (SessionViewModel session in Model)
+    {
+        <div class="list-group-item">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    @if (session.IsCurentSession)
+                    {
+                        <span class="badge bg-success"Actual session></span>
+                    }
+                    <p class="mb-1"><strong>IP:</strong> @session.IpAddress</p>
+                    <p class="mb-1"><strong>Device:</strong> @session.UserAgent</p>
+                    <p class="mb-0 text-muted">
+                        Login in @session.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                    </p>
+                </div>
+                <form asp-action="Revoke" method="post">
+                    <input type="hidden" name="sessionId" value="@session.Id" />
+                    <button type ="submit" class="btn btn-sm btn-outline-danger">
+                        @(session.IsCurentSession ? "Close session" : "Close this session")
+                    </button>
+                </form>
+            </div>
+        </div>
+    }
+</div>
+
+<a asp-controller="Profile" asp-action="Index" class="btn btn-link mt-3">Return to profile</a>
