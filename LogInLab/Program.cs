@@ -39,6 +39,7 @@ builder.Services.AddScoped<IMfaSecretRepository, MfaSecretRepository>();
 builder.Services.AddScoped<IBackupCodeRepository, BackupCodeRepository>();
 builder.Services.AddScoped<IMfaService, MfaService>();
 builder.Services.AddScoped<IAuthEventLogger, AuthEventLogger>();
+builder.Services.AddScoped<ISessionManagementSerivce, SessionManagementService>();
 
 builder.Services.AddHttpClient<IPasswordBreachChecker, HaveIBeenPwnedChecker>(client =>
 {

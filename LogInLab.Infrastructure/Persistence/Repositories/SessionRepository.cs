@@ -45,5 +45,11 @@ namespace LogInLab.Infrastructure.Persistence.Repositories
 
             await _dbContext.SaveChangesAsync();
         }
+
+        public async Task<List<Session>> GetActiveByUserIdAsync(Guid id)
+        {
+            return await _dbContext.Sessions.Where(s => s.UserId == id && s.RevokedAt == null && s.ExpiresAt > DateTime.UtcNow)
+                .OrderByDescending(s => s.CreatedAt).ToListAsync();
+        }
     }
 }

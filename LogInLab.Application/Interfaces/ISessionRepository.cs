@@ -8,5 +8,6 @@ namespace LogInLab.Application.Interfaces
         Task AddAsync(Session session);
         Task RevokeAsync(Guid id);
         Task RevokeAllForUserAsync(Guid userId);
+        Task<List<Session>> GetActiveByUserIdAsync(Guid id);
     }
 }
