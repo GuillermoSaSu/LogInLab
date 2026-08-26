@@ -14,6 +14,8 @@
         PasswordResetCompleted,
         MfaEnabled,
         MfaDisabled,
-        EmailVerified
+        EmailVerified,
+        MagicLinkRequested,
+        MagicLinkConsumed
     }
 }

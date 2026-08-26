@@ -182,5 +182,23 @@ namespace LogInLab.Application.Services
             await _sessionRepository.RevokeAsync(sessionId);
             await _authEventLogger.LogAsync(AuthEventType.Logout, ipAddress, userAgent, userId);
         }
+
+        public async Task<LoginResult> CompleteMagicLinkLoginAsync(Guid userId, string ipAddress, string userAgent)
+        {
+            User? user = await _userRepository.GetByIdAsync(userId);
+            if (user is null)
+            {
+                return LoginResult.FailureResult("The login could not be completed");
+            }
+
+            if (user.MfaEnabled)
+            {
+                return LoginResult.MfaRequired(user.Id);
+            }
+
+            await _authEventLogger.LogAsync(AuthEventType.LoginSuccess, ipAddress, userAgent, user.Id, user.Email);
+
+            return await CreateSessionAndCompleteLoginAsync(user, ipAddress, userAgent);
+        }
     }
 }

@@ -21,6 +21,7 @@ namespace LogInLab.Infrastructure.Persistence
 
         public DbSet<AuthEvent> AuthEvents => Set<AuthEvent>();
 
+        public DbSet<MagicLinkToken> MagicLinkTokens => Set<MagicLinkToken>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

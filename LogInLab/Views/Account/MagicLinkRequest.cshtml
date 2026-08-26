@@ -1,0 +1,25 @@
+﻿@model LogInLab.Models.ViewModels.MagicLinkRequestViewModel
+
+@{
+    ViewData["Title"] = "Access without password";
+}
+
+<h1>Access without passwords</h1>
+
+<p>Enter your email and we will send a link to login without necessary password.</p>
+
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+<form asp-action="MagicLinkRequest" method="post">
+    <div class="form-group mb-3">
+        <label asp-for="Email"></label>
+        <input asp-for="Email" class="form-control" autocomplete="email"/>
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Send link</button>
+</form>
+
+@section Scripts{
+    <partial name="_ValidationScriptsPartial" />
+}

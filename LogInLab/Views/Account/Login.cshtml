@@ -11,6 +11,11 @@
     <div class="alert alert-success">@TempData["SuccessMessage"]</div>
 }
 
+@if (TempData["ErrorMessage"] is not null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
 <form asp-action="Login" method="post">
@@ -35,6 +40,10 @@
 
 <p class="mt-3">
     <a asp-action="ForgotPassword">Forgot your password??</a>
+</p>
+
+<p class="mt-3">
+    <a asp-action="MagicLinkRequest">Access without password</a>
 </p>
 
 @section Scripts {

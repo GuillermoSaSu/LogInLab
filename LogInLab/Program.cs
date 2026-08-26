@@ -40,6 +40,8 @@ builder.Services.AddScoped<IBackupCodeRepository, BackupCodeRepository>();
 builder.Services.AddScoped<IMfaService, MfaService>();
 builder.Services.AddScoped<IAuthEventLogger, AuthEventLogger>();
 builder.Services.AddScoped<ISessionManagementSerivce, SessionManagementService>();
+builder.Services.AddScoped<IMagicLinkToken , MagicLinkTokenRepository>();
+builder.Services.AddScoped<IMagicLinkService , MagicLinkService>();
 
 builder.Services.AddHttpClient<IPasswordBreachChecker, HaveIBeenPwnedChecker>(client =>
 {

@@ -17,13 +17,15 @@ namespace LogInLab.Controllers
         private readonly IEmailVerificationService _emailVerificationService;
         private readonly IPasswordResetService _passwordResetService;
         private readonly IMfaService _mfaService;
+        private readonly IMagicLinkService _magicLinkService;
 
-        public AccountController(IAuthService authService, IEmailVerificationService emailVerificationService, IPasswordResetService passwordResetService, IMfaService mfaService)
+        public AccountController(IAuthService authService, IEmailVerificationService emailVerificationService, IPasswordResetService passwordResetService, IMfaService mfaService, IMagicLinkService magicLinkService)
         {
             _authService = authService;
             _emailVerificationService = emailVerificationService;
             _passwordResetService = passwordResetService;
             _mfaService = mfaService;
+            _magicLinkService = magicLinkService;
         }
 
         [HttpGet]
@@ -275,6 +277,64 @@ namespace LogInLab.Controllers
             {
                 ModelState.AddModelError(string.Empty, result.ErrorMessage);
                 return View(model);
+            }
+
+            await SignInUserAsync(result.UserId!.Value, result.SessionId!.Value);
+
+            return RedirectToAction("Index", "Profile");
+        }
+
+        [HttpGet]
+        public IActionResult MagicLinkRequest()
+        {
+            return View(new MagicLinkRequestViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [EnableRateLimiting("AuthModerate")]
+        public async Task<IActionResult> MagicLinkRequest(MagicLinkRequestViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            string userAgent = Request.Headers.UserAgent.ToString();
+
+            await _magicLinkService.RequestMagicLinkAsync(model.Email, ipAddress, userAgent);
+
+            TempData["SuccessMessage"] =
+                "If the account exists and it is verified, we are sending an access link.";
+
+            return RedirectToAction("Login");
+        }
+
+        [HttpGet]
+        [EnableRateLimiting("AuthStrict")]
+        public async Task<IActionResult> MagicLinkLogin(string token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return RedirectToAction("Login");
+            }
+
+            string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            string userAgent = Request.Headers.UserAgent.ToString();
+
+            LoginResult result = await _magicLinkService.ConsumeMagicLinkAsync(token, ipAddress, userAgent);
+
+            if (result.RequiresMfa)
+            {
+                TempData["PendingMfaUserId"] = result.UserId!.Value.ToString();
+                return RedirectToAction("VerifyLoginMfa");
+            }
+
+            if (!result.Success)
+            {
+                TempData["ErrorMessage"] = result.ErrorMessage;
+                return RedirectToAction("Login");
             }
 
             await SignInUserAsync(result.UserId!.Value, result.SessionId!.Value);
