@@ -1,3 +1,4 @@
+using Fido2NetLib;
 using FluentValidation;
 using LogInLab.Application.DTOs;
 using LogInLab.Application.Interfaces;
@@ -42,6 +43,15 @@ builder.Services.AddScoped<IAuthEventLogger, AuthEventLogger>();
 builder.Services.AddScoped<ISessionManagementSerivce, SessionManagementService>();
 builder.Services.AddScoped<IMagicLinkToken , MagicLinkTokenRepository>();
 builder.Services.AddScoped<IMagicLinkService , MagicLinkService>();
+builder.Services.AddScoped<IWebAuthnCredentialRepository, WebAuthnCredentialRepository>();
+
+builder.Services.AddSingleton<IFido2>(sp => new Fido2(new Fido2Configuration
+{
+    ServerDomain = "localhost",
+    ServerName = "LogInLab",
+    Origins = new HashSet<string> { "https://localhost:7122"},
+    TimestampDriftTolerance = 300000
+}));
 
 builder.Services.AddHttpClient<IPasswordBreachChecker, HaveIBeenPwnedChecker>(client =>
 {

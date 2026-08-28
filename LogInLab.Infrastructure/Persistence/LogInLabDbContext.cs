@@ -23,6 +23,8 @@ namespace LogInLab.Infrastructure.Persistence
 
         public DbSet<MagicLinkToken> MagicLinkTokens => Set<MagicLinkToken>();
 
+        public DbSet<WebAuthnCredential> WebAuthnCredentials => Set<WebAuthnCredential>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
